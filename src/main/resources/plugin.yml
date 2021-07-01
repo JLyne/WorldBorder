@@ -160,3 +160,6 @@ permissions:
   worldborder.wshape:
     description: Can set an overriding border shape for a single world
     default: op
+  worldborder.allowbypass:
+    description: Can allow a player to bypass the world border
+    default: false
