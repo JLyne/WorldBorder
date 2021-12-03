@@ -1,6 +1,6 @@
 # WorldBorder (Pure's Fork)
 
-**Compatible with Minecraft 1.13+ (Tested on Minecraft 1.17)**
+**Compatible with Minecraft 1.13+ (Tested on Minecraft 1.18)**
 
 This is a continuation / maintained version of the original plugin created by BrettFlan.
 
