@@ -1,10 +1,10 @@
 plugins {
     id("java-library")
-    id("com.github.johnrengelman.shadow") version "7.0.0"
+    id("com.github.johnrengelman.shadow") version "7.1.0"
 }
 
 group = "com.wimbli.WorldBorder"
-version = "1.17"
+version = "1.18"
 
 java {
     toolchain {
@@ -22,7 +22,7 @@ repositories {
 dependencies {
     compileOnly(group = "org.spigotmc", name = "spigot-api", version = "1.14-R0.1-SNAPSHOT")
     compileOnly(group = "us.dynmap", name = "dynmap-api", version = "3.1")
-    implementation(group = "io.papermc", name = "paperlib", version = "1.0.6")
+    implementation(group = "io.papermc", name = "paperlib", version = "1.0.8-SNAPSHOT")
 }
 
 defaultTasks("clean", "build")
