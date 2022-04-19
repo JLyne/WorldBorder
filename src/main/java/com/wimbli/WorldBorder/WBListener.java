@@ -23,7 +23,7 @@ public class WBListener implements Listener
 		if (Config.Debug())
 			Config.log("Teleport cause: " + event.getCause().toString());
 
-		Location newLoc = BorderCheckTask.checkPlayer(event.getPlayer(), event.getTo(), true, true);
+		Location newLoc = BorderCheckTask.checkPlayer(event.getPlayer(), event.getTo(), true, false, true);
 		if (newLoc != null)
 		{
 			if(event.getCause() == PlayerTeleportEvent.TeleportCause.ENDER_PEARL && Config.getDenyEnderpearl())
@@ -43,9 +43,11 @@ public class WBListener implements Listener
 		if (Config.KnockBack() == 0.0 || !Config.portalRedirection())
 			return;
 
-		Location newLoc = BorderCheckTask.checkPlayer(event.getPlayer(), event.getTo(), true, false);
-		if (newLoc != null)
+		Location newLoc = BorderCheckTask.checkPlayer(event.getPlayer(), event.getTo(), true, true, false);
+		if (newLoc != null) {
 			event.setTo(newLoc);
+			event.setCreationRadius(0);
+		}
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)

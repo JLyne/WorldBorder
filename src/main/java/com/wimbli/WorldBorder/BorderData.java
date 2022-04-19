@@ -208,7 +208,7 @@ public class BorderData
 		return insideBorder(coord.x, coord.z, Config.ShapeRound());
 	}
 
-	public Location correctedPosition(Location loc, boolean round, boolean flying)
+	public Location correctedPosition(Location loc, boolean round, boolean flying, boolean ignoreWrapping)
 	{
 		// if this border has a shape override set, use it
 		if (shapeRound != null)
@@ -221,7 +221,7 @@ public class BorderData
 		// square border
 		if (!round)
 		{
-			if (wrapping)
+			if (wrapping && !ignoreWrapping)
 			{
 				if (xLoc <= minX)
 					xLoc = maxX - Config.KnockBack();
@@ -257,7 +257,7 @@ public class BorderData
 			double dU = Math.sqrt(dX *dX + dZ * dZ); //distance of the untransformed point from the center
 			double dT = Math.sqrt(dX *dX / radiusXSquared + dZ * dZ / radiusZSquared); //distance of the transformed point from the center
 			double f = (1 / dT - Config.KnockBack() / dU); //"correction" factor for the distances
-			if (wrapping)
+			if (wrapping && !ignoreWrapping)
 			{
 				xLoc = x - dX * f;
 				zLoc = z - dZ * f;
@@ -283,11 +283,11 @@ public class BorderData
 	}
 	public Location correctedPosition(Location loc, boolean round)
 	{
-		return correctedPosition(loc, round, false);
+		return correctedPosition(loc, round, false, false);
 	}
 	public Location correctedPosition(Location loc)
 	{
-		return correctedPosition(loc, Config.ShapeRound(), false);
+		return correctedPosition(loc, Config.ShapeRound(), false, false);
 	}
 
 	//these material IDs are acceptable for places to teleport player; breathable blocks and water

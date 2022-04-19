@@ -31,7 +31,7 @@ public class BorderCheckTask implements Runnable
 
 		for (Player player : players)
 		{
-			checkPlayer(player, null, false, true);
+			checkPlayer(player, null, false, false, true);
 		}
 	}
 
@@ -39,7 +39,7 @@ public class BorderCheckTask implements Runnable
 	private static Set<String> handlingPlayers = Collections.synchronizedSet(new LinkedHashSet<String>());
 
 	// set targetLoc only if not current player location; set returnLocationOnly to true to have new Location returned if they need to be moved to one, instead of directly handling it
-	public static Location checkPlayer(Player player, Location targetLoc, boolean returnLocationOnly, boolean notify)
+	public static Location checkPlayer(Player player, Location targetLoc, boolean returnLocationOnly, boolean ignoreWrapping, boolean notify)
 	{
 		if (player == null || !player.isOnline()) return null;
 
@@ -61,7 +61,7 @@ public class BorderCheckTask implements Runnable
 		// tag this player as being handled so we can't get stuck in a loop due to Bukkit currently sometimes repeatedly providing incorrect location through teleport event
 		handlingPlayers.add(player.getName().toLowerCase());
 
-		Location newLoc = newLocation(player, loc, border, notify);
+		Location newLoc = newLocation(player, loc, border, ignoreWrapping, notify);
 		boolean handlingVehicle = false;
 
 		/*
@@ -125,10 +125,10 @@ public class BorderCheckTask implements Runnable
 	}
 	public static Location checkPlayer(Player player, Location targetLoc, boolean returnLocationOnly)
 	{
-		return checkPlayer(player, targetLoc, returnLocationOnly, true);
+		return checkPlayer(player, targetLoc, returnLocationOnly, false, true);
 	}
 
-	private static Location newLocation(Player player, Location loc, BorderData border, boolean notify)
+	private static Location newLocation(Player player, Location loc, BorderData border, boolean ignoreWrapping, boolean notify)
 	{
 		if (Config.Debug())
 		{
@@ -136,7 +136,7 @@ public class BorderCheckTask implements Runnable
 			Config.logWarn("Player position X: " + Config.coord.format(loc.getX()) + " Y: " + Config.coord.format(loc.getY()) + " Z: " + Config.coord.format(loc.getZ()));
 		}
 
-		Location newLoc = border.correctedPosition(loc, Config.ShapeRound(), player.isFlying());
+		Location newLoc = border.correctedPosition(loc, Config.ShapeRound(), player.isFlying(), ignoreWrapping);
 
 		// it's remotely possible (such as in the Nether) a suitable location isn't available, in which case...
 		if (newLoc == null)
