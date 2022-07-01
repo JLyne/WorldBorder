@@ -17,12 +17,13 @@ public class CmdTrim extends WBCmd
 		hasWorldNameInput = true;
 		consoleRequiresWorldName = false;
 		minParams = 0;
-		maxParams = 2;
+		maxParams = 3;
 
-		addCmdExample(nameEmphasizedW() + "[freq] [pad] - trim world outside of border.");
+		addCmdExample(nameEmphasizedW() + "[freq] [pad] [type] - trim world outside of border.");
 		helpText = "This command will remove chunks which are outside the world's border. [freq] is the frequency " +
 			"of chunks per second that will be checked (default 5000). [pad] is the number of blocks padding kept " +
-			"beyond the border itself (default 208, to cover player visual range).";
+			"beyond the border itself (default 208, to cover player visual range). [type] is the type of data to" +
+			"scan ('all', 'region', 'poi' or 'entities', default 'all')";
 	}
 
 	@Override
@@ -99,9 +100,33 @@ public class CmdTrim extends WBCmd
 			return;
 		}
 
+		// set type (region, poi or entities)
+		if (params.size() >= 3 && !confirm) 
+		{
+			if (params.get(2).equals("region"))
+				trimType = WorldFileDataType.REGION;
+			else if (params.get(2).equals("poi"))
+				trimType = WorldFileDataType.POI;
+			else if (params.get(2).equals("entities"))
+				trimType = WorldFileDataType.ENTITIES;
+			else if (params.get(2).equals("all"))
+				trimType = WorldFileDataType.ALL;
+			else 
+			{
+				sendErrorAndHelp(sender, "The type value must be 'all', 'region', 'poi' or 'entities'." + params.get(2));
+				trimDefaults();
+				return;
+			}
+		}
+
 		// set world if it was specified
 		if (worldName != null)
 			trimWorld = worldName;
+
+		String printType = "regions, POIs and entities";
+		if (trimType == WorldFileDataType.REGION) printType = "regions";
+		if (trimType == WorldFileDataType.POI) printType = "POIs";
+		if (trimType == WorldFileDataType.ENTITIES) printType = "entities";
 
 		if (confirm)
 		{	// command confirmed, go ahead with it
@@ -120,12 +145,12 @@ public class CmdTrim extends WBCmd
 			else
 				ticks = 20 / trimFrequency;
 
-			Config.trimTask = new WorldTrimTask(Bukkit.getServer(), player, trimWorld, trimPadding, repeats);
+			Config.trimTask = new WorldTrimTask(Bukkit.getServer(), player, trimWorld, trimPadding, repeats, trimType);
 			if (Config.trimTask.valid())
 			{
 				int task = Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(WorldBorder.plugin, Config.trimTask, ticks, ticks);
 				Config.trimTask.setTaskID(task);
-				sender.sendMessage("WorldBorder map trimming task for world \"" + trimWorld + "\" started.");
+				sender.sendMessage("WorldBorder " + printType + " trimming task for world \"" + trimWorld + "\" started.");
 			}
 			else
 				sender.sendMessage(C_ERR + "The world map trimming task failed to start.");
@@ -140,7 +165,7 @@ public class CmdTrim extends WBCmd
 				return;
 			}
 
-			sender.sendMessage(C_HEAD + "World trimming task is ready for world \"" + trimWorld + "\", attempting to process up to " + trimFrequency + " chunks per second (default 20). The map will be trimmed past " + trimPadding + " blocks beyond the border (default " + defaultPadding + ").");
+			sender.sendMessage(C_HEAD + "World trimming task is ready for world \"" + trimWorld + "\", attempting to process up to " + trimFrequency + " chunks per second (default 20). The map will be trimmed past " + trimPadding + " blocks beyond the border (default " + defaultPadding + "). Files of " + printType + " will be trimmed (default all).");
 			sender.sendMessage(C_HEAD + "This process can take a very long time depending on the world's overall size. Also, depending on the chunk processing rate, players may experience lag for the duration.");
 			sender.sendMessage(C_DESC + "You should now use " + cmd + "confirm" + C_DESC + " to start the process.");
 			sender.sendMessage(C_DESC + "You can cancel at any time with " + cmd + "cancel" + C_DESC + ", or pause/unpause with " + cmd + "pause" + C_DESC + ".");
@@ -157,12 +182,14 @@ public class CmdTrim extends WBCmd
 	private String trimWorld = "";
 	private int trimFrequency = 5000;
 	private int trimPadding = defaultPadding;
+	private WorldFileDataType trimType = WorldFileDataType.ALL;
 
 	private void trimDefaults()
 	{
 		trimWorld = "";
 		trimFrequency = 5000;
 		trimPadding = defaultPadding;
+		trimType = WorldFileDataType.ALL;
 	}
 
 	private boolean makeSureTrimIsRunning(CommandSender sender)

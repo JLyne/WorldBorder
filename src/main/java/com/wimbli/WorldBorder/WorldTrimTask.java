@@ -28,8 +28,10 @@ public class WorldTrimTask implements Runnable
 	private transient int taskID = -1;
 	private transient Player notifyPlayer = null;
 	private transient int chunksPerRun = 1;
+	private transient WorldFileDataType typeToTrim = null;
 	
 	// values for what chunk in the current region we're at
+	private transient WorldFileDataType currentType = WorldFileDataType.REGION;
 	private transient int currentRegion = -1;  // region(file) we're at in regionFiles
 	private transient int regionX = 0;  // X location value of the current region
 	private transient int regionZ = 0;  // X location value of the current region
@@ -48,9 +50,17 @@ public class WorldTrimTask implements Runnable
 
 	public WorldTrimTask(Server theServer, Player player, String worldName, int trimDistance, int chunksPerRun)
 	{
+		this(theServer, player, worldName, trimDistance, chunksPerRun, WorldFileDataType.ALL);
+	}
+
+	public WorldTrimTask(Server theServer, Player player, String worldName, int trimDistance, int chunksPerRun, WorldFileDataType type)
+	{
 		this.server = theServer;
 		this.notifyPlayer = player;
 		this.chunksPerRun = chunksPerRun;
+		this.typeToTrim = type;
+		if (type != WorldFileDataType.ALL) this.currentType = type;
+		else this.currentType = WorldFileDataType.REGION;
 
 		this.world = server.getWorld(worldName);
 		if (this.world == null)
@@ -74,7 +84,7 @@ public class WorldTrimTask implements Runnable
 		this.border.setRadiusX(border.getRadiusX() + trimDistance);
 		this.border.setRadiusZ(border.getRadiusZ() + trimDistance);
 
-		worldData = WorldFileData.create(world, notifyPlayer);
+		worldData = WorldFileData.create(world, notifyPlayer, currentType, false);
 		if (worldData == null)
 		{
 			this.stop();
@@ -342,8 +352,45 @@ public class WorldTrimTask implements Runnable
 	{
 		reportTotal = reportTarget;
 		reportProgress();
+
+		boolean resetAndRestart = false;
+
+		// If trim all types : region -> poi
+		if (!resetAndRestart && typeToTrim == WorldFileDataType.ALL && currentType == WorldFileDataType.REGION )
+		{
+			currentType = WorldFileDataType.POI;
+			worldData = WorldFileData.create(world, notifyPlayer, currentType, true);
+			if (worldData != null) resetAndRestart = true;
+		}
+
+		// If trim all types : poi -> entities
+		if (!resetAndRestart && typeToTrim == WorldFileDataType.ALL && currentType == WorldFileDataType.POI )
+		{
+			currentType = WorldFileDataType.ENTITIES;
+			worldData = WorldFileData.create(world, notifyPlayer, currentType, true);
+			if (worldData != null) resetAndRestart = true;
+		}
+
+		if (resetAndRestart) 
+		{
+			currentRegion = -1;
+			reportTarget = worldData.regionFileCount() * 3072;
+			reportTotal = 0;
+			reportTrimmedRegions = 0;
+			reportTrimmedChunks = 0;
+			counter = 0;
+			nextFile();
+
+			paused = false;
+			readyToGo = true;
+			return;
+		}
+
 		Bukkit.getServer().getPluginManager().callEvent(new WorldBorderTrimFinishedEvent(world, reportTotal));
-		sendMessage("task successfully completed!");
+		sendMessage("Task successfully completed!");
+		sendMessage("NOTICE: it is recommended that you restart your server after a Trim, to be on the safe side.");
+		if (DynMapFeatures.renderEnabled())
+			sendMessage("This especially true with DynMap. You should also run a fullrender in DynMap for the trimmed world after restarting, so trimmed chunks are updated on the map.");
 		this.stop();
 	}
 
@@ -363,10 +410,6 @@ public class WorldTrimTask implements Runnable
 		if (taskID != -1)
 			server.getScheduler().cancelTask(taskID);
 		server = null;
-
-		sendMessage("NOTICE: it is recommended that you restart your server after a Trim, to be on the safe side.");
-		if (DynMapFeatures.renderEnabled())
-			sendMessage("This especially true with DynMap. You should also run a fullrender in DynMap for the trimmed world after restarting, so trimmed chunks are updated on the map.");
 	}
 
 	// is this task still valid/workable?
@@ -396,7 +439,10 @@ public class WorldTrimTask implements Runnable
 	{
 		lastReport = Config.Now();
 		double perc = getPercentageCompleted();
-		sendMessage(reportTrimmedRegions + " entire region(s) and " + reportTrimmedChunks + " individual chunk(s) trimmed so far (" + Config.coord.format(perc) + "% done" + ")");
+		String type = "Regions";
+		if (currentType == WorldFileDataType.POI) type = "POIs";
+		if (currentType == WorldFileDataType.ENTITIES) type = "Entities";
+		sendMessage("[" + type + "] " + reportTrimmedRegions + " entire region(s) and " + reportTrimmedChunks + " individual chunk(s) trimmed so far (" + Config.coord.format(perc) + "% done" + ")");
 	}
 
 	// send a message to the server console/log and possibly to an in-game player

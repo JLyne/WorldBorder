@@ -28,19 +28,30 @@ public class WorldFileData
 	private transient Player notifyPlayer = null;
 	private transient Map<CoordXZ, List<Boolean>> regionChunkExistence = Collections.synchronizedMap(new HashMap<CoordXZ, List<Boolean>>());
 
-	// Use this static method to create a new instance of this class. If null is returned, there was a problem so any process relying on this should be cancelled.
 	public static WorldFileData create(World world, Player notifyPlayer)
+	{
+		return create(world, notifyPlayer, WorldFileDataType.REGION, false);
+	}
+
+	// Use this static method to create a new instance of this class. If null is returned, there was a problem so any process relying on this should be cancelled.
+	// Defaults to "REGION" if "type" is "WorldFileDataType.ALL"
+	public static WorldFileData create(World world, Player notifyPlayer, WorldFileDataType type, boolean silent)
 	{
 		WorldFileData newData = new WorldFileData(world, notifyPlayer);
 
-		newData.regionFolder = new File(newData.world.getWorldFolder(), "region");
+		String subFolder = "region";
+		if (type == WorldFileDataType.REGION) subFolder = "region";
+		else if (type == WorldFileDataType.POI) subFolder = "poi";
+		else if (type == WorldFileDataType.ENTITIES) subFolder = "entities";
+
+		newData.regionFolder = new File(newData.world.getWorldFolder(), subFolder);
 		if (!newData.regionFolder.exists() || !newData.regionFolder.isDirectory())
 		{
 			// check for region folder inside a DIM* folder (DIM-1 for nether, DIM1 for end, DIMwhatever for custom world types)
 			File[] possibleDimFolders = newData.world.getWorldFolder().listFiles(new DimFolderFileFilter());
 			for (File possibleDimFolder : possibleDimFolders)
 			{
-				File possible = new File(newData.world.getWorldFolder(), possibleDimFolder.getName() + File.separator + "region");
+				File possible = new File(newData.world.getWorldFolder(), possibleDimFolder.getName() + File.separator + subFolder);
 				if (possible.exists() && possible.isDirectory())
 				{
 					newData.regionFolder = possible;
@@ -49,7 +60,8 @@ public class WorldFileData
 			}
 			if (!newData.regionFolder.exists() || !newData.regionFolder.isDirectory())
 			{
-				newData.sendMessage("Could not validate folder for world's region files. Looked in "+newData.world.getWorldFolder().getPath()+" for valid DIM* folder with a region folder in it.");
+				if (!silent)
+				newData.sendMessage("Could not validate folder for world's "+subFolder+" files. Looked in "+newData.world.getWorldFolder().getPath()+" for valid DIM* folder with a region folder in it.");
 				return null;
 			}
 		}
@@ -61,7 +73,8 @@ public class WorldFileData
 			newData.regionFiles = newData.regionFolder.listFiles(new ExtFileFilter(".MCR"));
 			if (newData.regionFiles == null || newData.regionFiles.length == 0)
 			{
-				newData.sendMessage("Could not find any region files. Looked in: "+newData.regionFolder.getPath());
+				if (!silent)
+				newData.sendMessage("Could not find any "+subFolder+" files. Looked in: "+newData.regionFolder.getPath());
 				return null;
 			}
 		}
