@@ -1,5 +1,6 @@
 plugins {
     id("java-library")
+    id("maven-publish")
     id("com.github.johnrengelman.shadow") version "7.1.0"
 }
 
@@ -10,6 +11,7 @@ java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(8))
     }
+    withSourcesJar()
 }
 
 repositories {
@@ -51,5 +53,16 @@ tasks {
 
     build {
         dependsOn(shadowJar)
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = "${project.group}"
+            artifactId = project.name
+            version = "${project.version}"
+            from(components["java"])
+        }
     }
 }
