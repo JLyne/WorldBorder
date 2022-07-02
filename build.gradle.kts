@@ -1,11 +1,11 @@
 plugins {
     id("java-library")
     id("maven-publish")
-    id("com.github.johnrengelman.shadow") version "7.1.0"
+    id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
 group = "com.wimbli.WorldBorder"
-version = "1.18"
+version = "1.19"
 
 java {
     toolchain {
