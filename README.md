@@ -1,6 +1,6 @@
 # WorldBorder (Pure's Fork)
 
-**Compatible with Minecraft 1.13+ (Tested on Minecraft 1.18)**
+**Compatible with Minecraft 1.13+ (Tested on Minecraft 1.19)**
 
 This is a continuation / maintained version of the original plugin created by BrettFlan.
 
@@ -16,6 +16,7 @@ This is a list of everything that has been altered from the original from a user
 * Auto resume for the world generation fill task will now work properly with worlds loaded by [Multiverse-Core](https://www.spigotmc.org/resources/multiverse-core.390/) & [Hyperverse](https://www.spigotmc.org/resources/hyperverse-w-i-p.77550/)
 * An incompatibility between Java 8 and Java 9+ was resolved
 * Ability to bypass the worldborder via permission `worldborder.allowbypass` as an alternative to the bypass list
+* The world trimming feature now supports entity (1.17+) and POI (1.14+) removal
 
 This project is a direct drop in replacement for the original. You can upgrade without any loss or worries.
 
