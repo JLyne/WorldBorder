@@ -2,7 +2,7 @@ name: "${name}"
 authors: ["Brettflan", "Puremin0rez"]
 description: Efficient, feature-rich plugin for limiting and generating your worlds.
 version: "${version}"
-api-version: "1.13"
+api-version: "1.20.6"
 main: "${group}.${name}"
 softdepend:
   - dynmap
